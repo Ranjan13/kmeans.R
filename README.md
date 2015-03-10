@@ -5,6 +5,7 @@ This is the implementation of kmeans algorithm in R-language. This is the part o
 The program for K-means is implemented in R
 R should be installed in the system.
 
+
 Download :: http://cran.r-project.org/
 HOW TO RUN:
 -----------
@@ -21,3 +22,4 @@ OUT PUT:
 	In Classified Matrix (with dimension cluster number x test data) 
 		classified matrix[i,j] = 1 => data point "j" is in cluster "i"
 		else 0.
+This code has been run on letter-recognition data with 26 clusters. It was run for multiple time and gave an error within the range [75%-79%].
