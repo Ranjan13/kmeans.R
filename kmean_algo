@@ -1,0 +1,190 @@
+/*
+This algorithm has been implemented in R. 
+*/
+
+
+# initialize centroid
+# randomly return k centroid value to from data
+initial.center = function (data, k) {
+	return (data[sample(nrow(data), k),])
+}
+
+# fill in Distance Matrix
+# The distMatrix contains the distance between (euclidean) the centroid and data points.
+fillDist = function (data, centroid, distMatrix) {
+	for(r in 1:nrow(centroid)) {
+		for(c in 1:nrow(data)) {
+			value = 0
+			for(feat in 1:ncol(data)) {
+				value = value + (data[c,feat]-centroid[r,feat])**2 # Euclidean distance of n features.
+			}
+			value = sqrt(value)
+			distMatrix[r,c] = value
+		}
+	}
+	return (distMatrix)
+}
+# A support function
+ini = function (x){
+x = 0
+return(x)
+}
+
+
+# fill in Group Matrix
+# This module fills the group matrix. The group matrix essentially is the data structure used for identify the classification. group[i,j] means j point is avail on ith cluster. if yes then 1 else 0
+fillGroup = function (distMatrix, group) {
+	
+	group = apply(group, c(1,2),ini) 
+
+	for(c in 1:ncol(distMatrix)) {
+		min = min(distMatrix[,c])
+		index = match(min, distMatrix[,c])
+		group[index,c] = 1
+	}
+	return(group)
+}
+
+# Change centroid
+# This function recalculates the centroid points. 
+newCentroid = function (data, group, centroid) {
+	for(k in 1:nrow(group)) {
+	v = c()
+		for(i in 1:ncol(group)) {
+			if(group[k,i] == 1) { # For the points in the same cluster
+				v = c(v, i)
+			}
+		}
+		for(j in 1:ncol(data)) {
+		sum = 0
+			for(r in v) {
+				sum = data[r,j] + sum # Finding the mean distance
+			}
+			sum = sum/length(v)
+			centroid[k,j] = sum
+		}
+	}
+	return(centroid)
+}
+# Preprocessing 
+# Here the data is prepared. 
+
+preprocess <- function() {
+  
+  	  args<-commandArgs(TRUE)
+	  x <- args[1]
+	  dataset = read.delim(x, header=TRUE, sep = ",")
+	  print(dataset)
+	  indexes = sample(1:nrow(dataset), size = 0.2*nrow(dataset)) # randomly selecting 20 indexes
+	  #dataset1 = data.frame(dataset)
+
+	  test <- dataset[indexes,] # Using them as test data
+	  data = dataset[-indexes,] # Using without them as training data
+	  
+	  data_label = data[,10] # removing label column 
+	  data = data[,-10]
+	  
+	  test_label <- test[,1]
+	  #print(test)
+	  test <- test[,-10]
+	  test <- data.matrix(test) # Converting to matrix
+	 # print(test)
+
+	  data = data.matrix(data)
+	  cat("Enter cluster number :")
+	  k = readLines(con="stdin", 1)
+	  k = as.double(k)
+	 centroid = kmeans(data, data_label, k) # Calling K-means
+	 testgroup = test(test, centroid, k) # Testing the classifer with test data, output is classified matrix
+	 #print(typeof(test))
+	 err = error (testgroup, test_label) # Calculating error
+	 print("Centroid")
+	 print(centroid)
+	 cat("Error Percentage :")
+	 print(err)
+	 }
+  
+
+
+# K-means Algorithm
+kmeans = function (data, data_label, k) {
+	centroid = initial.center(data, k)
+	distMatrix = matrix(, nrow = k, ncol = nrow(data))
+	distMatrix = fillDist(data, centroid, distMatrix)
+	group = matrix(, nrow = k, ncol = nrow(data))
+	for(i in seq(1:30)) {
+		group = fillGroup(distMatrix, group)
+		centroid = newCentroid(data, group, centroid)
+		cat(".")
+		distMatrix = fillDist(data, centroid, distMatrix)
+		}
+	print("Centroid")
+	print(centroid)
+	label = c()
+	for(i in 1:nrow(centroid)) {
+		temp = display_label(group, data_label, i)
+		temp1 = labeller(temp)
+		label = c(label, temp1)
+		}
+	rownames(centroid) = label
+	return(centroid)
+
+		
+}
+
+# Test 
+# This function takes test data and centroid and classify the test data into corresponding clusters
+test = function(test, centroid, k) {
+	print(test)
+	distMatrix = matrix(, nrow = k, ncol = nrow(test))
+	distMatrix = fillDist(test, centroid, distMatrix) # Finding the distance b/w test instance and centroid
+	group = matrix (, nrow = k, ncol = nrow(test))
+	group = fillGroup(distMatrix, group) # Classifying them according to distance
+	print("After Testing")
+	print("Cluster groups")
+	rownames(group) = rownames(centroid)
+	return(group)
+	
+}
+
+# Calculating the error. 
+
+error = function(testgroup, test_label) {
+	err = c()
+	for(i in 1:nrow(testgroup)) {
+		v = display_label(testgroup, test_label, i)
+		total = length(v)
+		if(rownames(testgroup)[i] %in% v) { # The condition checks for successful classification to avoid
+			v = v[-which(v %in% rownames(testgroup)[i])] # All the unsuccesful classification 
+			l = length(v)
+			#cat("l : ")
+			#print(l)
+			#cat("total : ")
+			#print(total)
+			print(l/total) # Error value
+			err = c(err,(l/total)*100)
+			}
+		else {
+			l = length(v)
+			err = c(err,(l/total)*100)
+		}
+	print(err)
+	return(err)
+	}	
+}
+# Support functions, Just to extract rownames and labelling
+display_label = function(group, label_matrix, r) {
+	temp = as.matrix(label_matrix)[which(group[r,] %in% 1),]
+	return(temp)
+}
+
+labeller = function(mat) {
+	x = table(mat)
+	x = as.data.frame(x)
+	m = max(x[,2])
+	l = x[which(x[,2] %in% m),1]
+	l = as.vector(l)
+	return(l[1])
+}
+# Code start execution from here.
+preprocess()
