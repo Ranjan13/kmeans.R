@@ -9,7 +9,7 @@ R should be installed in the system.
 Download :: http://cran.r-project.org/
 HOW TO RUN:
 -----------
->Rscript kmeans.R <dataSet>
+>Rscript kmeans.R letter-recognition.dat
 
 OUT PUT:
 --------
