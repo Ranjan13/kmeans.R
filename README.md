@@ -10,6 +10,7 @@ Download :: http://cran.r-project.org/
 HOW TO RUN:
 -----------
 >Rscript kmeans.R letter-recognition.dat
+https://archive.ics.uci.edu/ml/machine-learning-databases/letter-recognition/letter-recognition.data
 
 OUT PUT:
 --------
